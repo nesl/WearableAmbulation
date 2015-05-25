@@ -1,0 +1,34 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">#259b24</item>
+        <item name="colorPrimaryDark">#056f00</item>
+        <item name="colorAccent">#72d572</item>
+        <item name="colorControlHighlight">#a3e9a4</item>
+    </style>
+
+
+    <style name="risedview">
+    </style>
+
+    <style name="legend_view">
+        <item name="android:clickable">true</item>
+        <item name="android:background">@drawable/button_bg</item>
+        <item name="android:padding">8dp</item>
+    </style>
+
+    <style name="AboutHeaderStyle" parent="android:Widget.TextView">
+        <item name="android:textColor">#ff767676</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">24sp</item>
+    </style>
+
+
+    <style name="AboutContentStyle" parent="android:Widget.TextView">
+        <item name="android:textColor">#ff767676</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+
+</resources>
