@@ -267,7 +267,36 @@ public class SensorService extends Service{
 
                     double accFft5 = goertzel(mData, 5., n);
 
-                    // Decision tree, 29 nodes, 88.81% accuracy
+//                    // Decision tree (acc only), 11 nodes, 78.17% accuracy
+//                    String activity = "null";
+//                    if (var < 2.01) {
+//                        if (var < 0.01) {
+//                            if (mean < 9.88) {
+//                                activity = "still";
+//                            }
+//                            else {
+//                                if (mean < 9.99) {
+//                                    activity = "transport";
+//                                }
+//                                else {
+//                                    activity = "walking";
+//                                }
+//                            }
+//                        }
+//                        else {
+//                            activity = "transport";
+//                        }
+//                    }
+//                    else {
+//                        if (accFft5 < 133.17) {
+//                            activity = "transport";
+//                        }
+//                        else {
+//                            activity = "walking";
+//                        }
+//                    }
+
+                    // Decision tree (acc + gps), 29 nodes, 88.81% accuracy
                     String activity = "null";
                     if (speed < 2.19) {
                         if (var < 0.86) {
