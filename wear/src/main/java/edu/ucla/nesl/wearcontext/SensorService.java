@@ -114,50 +114,53 @@ public class SensorService extends Service{
         client.sendSensorData(-1, 1, 111, new float[]{1.0f});
         v.vibrate(1000);
 
-        String prefix = "/storage/sdcard0/sensor_data/battery_idle_on_" + timeString.currentTimeForFile();
+        String prefix = "/storage/sdcard0/sensor_data/battery_" + timeString.currentTimeForFile();
+
         try {
             outputBattery = new BufferedWriter(new FileWriter(prefix + ".txt"));
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-//        if (logToFile) {
-//            try {
-//                outputAcc = new BufferedWriter(new FileWriter(prefix + ".wear.acc"));
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        }
+        if (logToFile) {
+            try {
+                outputAcc = new BufferedWriter(new FileWriter(prefix + ".wear.acc"));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
         // Wakelock
         PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         wl = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SensorCollector");
         wl.acquire();
 
-        handlerFlag = true;
-        wakeupHandler.sendEmptyMessage(0);
+//        // Handler to log battery info
+//        handlerFlag = true;
+//        wakeupHandler.sendEmptyMessage(0);
 
-//        mSensorManager = ((SensorManager) getSystemService(SENSOR_SERVICE));
-//        Sensor accelerometerSensor = mSensorManager.getDefaultSensor(SENS_ACCELEROMETER);
-//        // Register the listener
-//        if (mSensorManager != null) {
-//            if (accelerometerSensor != null) {
-//                mListener = new TransportationModeListener();
-//                mSensorManager.registerListener(mListener, accelerometerSensor, SensorManager.SENSOR_DELAY_FASTEST);
-//            } else {
-//                Log.w(TAG, "No Accelerometer found");
-//            }
-//        }
+        mSensorManager = ((SensorManager) getSystemService(SENSOR_SERVICE));
+        Sensor accelerometerSensor = mSensorManager.getDefaultSensor(SENS_ACCELEROMETER);
+        // Register the listener
+        if (mSensorManager != null) {
+            if (accelerometerSensor != null) {
+                mListener = new TransportationModeListener();
+                mSensorManager.registerListener(mListener, accelerometerSensor, SensorManager.SENSOR_DELAY_FASTEST);
+            } else {
+                Log.w(TAG, "No Accelerometer found");
+            }
+        }
     }
 
     private void stopMeasurement() {
         client.sendSensorData(-2, 2, 2, new float[]{2.0f});
         v.vibrate(200);
 
-        handlerFlag = false;
+//        // Stop battery log
+//        handlerFlag = false;
 
-//        mSensorManager.unregisterListener(mListener);
-//        mSensorManager = null;
+        mSensorManager.unregisterListener(mListener);
+        mSensorManager = null;
 
         if (outputBattery != null) {
             try {
@@ -167,16 +170,16 @@ public class SensorService extends Service{
                 e.printStackTrace();
             }
         }
-//
-//        if (logToFile) {
-//            try {
-//                outputAcc.flush();
-//                outputAcc.close();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//
-//        }
+
+        if (logToFile) {
+            try {
+                outputAcc.flush();
+                outputAcc.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
         wl.release();
     }
 
