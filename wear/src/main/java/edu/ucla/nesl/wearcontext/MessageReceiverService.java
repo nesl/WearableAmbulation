@@ -47,7 +47,7 @@ public class MessageReceiverService extends WearableListenerService {
 
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
-        Log.d(TAG, "Received message: " + messageEvent.getPath());
+        // Log.d(TAG, "Received message: " + messageEvent.getPath());
 
         if (messageEvent.getPath().equals(ClientPaths.START_MEASUREMENT)) {
             startService(new Intent(this, SensorService.class));
@@ -55,6 +55,17 @@ public class MessageReceiverService extends WearableListenerService {
 
         if (messageEvent.getPath().equals(ClientPaths.STOP_MEASUREMENT)) {
             stopService(new Intent(this, SensorService.class));
+        }
+
+        if (messageEvent.getPath().startsWith(ClientPaths.LOCATION_UPDATE)) {
+            String[] loc = messageEvent.getPath().split("/");
+            if (loc.length == 3) {
+                synchronized (SensorService.locLock) {
+                    SensorService.locSpeed = Double.parseDouble(loc[1]);
+                    SensorService.locAccuracy = Double.parseDouble(loc[2]);
+                    // Log.d(TAG, "Update loc: speed=" + SensorService.locSpeed + ", acc=" + SensorService.locAccuracy);
+                }
+            }
         }
     }
 }

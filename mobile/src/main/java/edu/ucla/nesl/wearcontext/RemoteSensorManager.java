@@ -1,6 +1,7 @@
 package edu.ucla.nesl.wearcontext;
 
 import android.content.Context;
+import android.location.Location;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -92,6 +93,15 @@ public class RemoteSensorManager {
             @Override
             public void run() {
                 controlMeasurementInBackground(ClientPaths.STOP_MEASUREMENT);
+            }
+        });
+    }
+
+    public void sendLocationUpdate(final Location loc) {
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                controlMeasurementInBackground(ClientPaths.LOCATION_UPDATE + "/" + loc.getSpeed() + "/" + loc.getAccuracy());
             }
         });
     }

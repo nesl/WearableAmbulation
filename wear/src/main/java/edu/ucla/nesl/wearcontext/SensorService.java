@@ -37,6 +37,10 @@ public class SensorService extends Service{
     private static int numThreads;
     private static final Object lock = new Object();
 
+    public static double locSpeed;
+    public static double locAccuracy;
+    public static final Object locLock = new Object();
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -132,8 +136,6 @@ public class SensorService extends Service{
         }
         wl.release();
     }
-
-
 
     private class TransportationModeListener implements SensorEventListener {
         int count = 0;
@@ -241,6 +243,14 @@ public class SensorService extends Service{
                     double sum = 0.0;
                     double mean = 0.0;
                     double var = 0.0;
+                    double speed = 0.0;
+                    double acc = 0.0;
+
+                    // Get last known gps speed and accuracy
+                    synchronized (SensorService.locLock) {
+                        speed = locSpeed;
+                        acc = locAccuracy;
+                    }
 
                     // Features: mean, var, and fft(5)
                     // Get mean an var
@@ -257,34 +267,80 @@ public class SensorService extends Service{
 
                     double accFft5 = goertzel(mData, 5., n);
 
-                    // Decision tree, 11 nodes, 78.17% accuracy
+                    // Decision tree, 29 nodes, 88.81% accuracy
                     String activity = "null";
-                    if (var < 2.01) {
-                        if (var < 0.01) {
-                            if (mean < 9.88) {
-                                activity = "still";
-                            }
-                            else {
-                                if (mean < 9.99) {
-                                    activity = "transport";
+                    if (speed < 2.19) {
+                        if (var < 0.86) {
+                            if (acc < 19.5) {
+                                if (var < 0.06) {
+                                    if (mean < 9.99) {
+                                        activity = "transport";
+                                    }
+                                    else {
+                                        activity = "walking";
+                                    }
                                 }
                                 else {
-                                    activity = "walking";
+                                    if (acc < 10.5) {
+                                        activity = "transport";
+                                    }
+                                    else {
+                                        activity = "walking";
+                                    }
+                                }
+                            }
+                            else {
+                                if (acc < 28.35) {
+                                    if (speed < 0.25) {
+                                        activity = "still";
+                                    }
+                                    else {
+                                        activity = "transport";
+                                    }
+                                }
+                                else {
+                                    if (speed < 0.25) {
+                                        activity = "walking";
+                                    }
+                                    else {
+                                        activity = "transport";
+                                    }
                                 }
                             }
                         }
                         else {
-                            activity = "transport";
+                            if (accFft5 < 130.7) {
+                                if (speed < 0.13) {
+                                    activity = "walking";
+                                }
+                                else {
+                                    if (acc < 118) {
+                                        activity = "transport";
+                                    }
+                                    else {
+                                        activity = "still";
+                                    }
+                                }
+                            }
+                            else {
+                                if (acc < 8.5) {
+                                    activity = "walking";
+                                }
+                                else {
+                                    if (acc < 10.5) {
+                                        activity = "still";
+                                    }
+                                    else {
+                                        activity = "walking";
+                                    }
+                                }
+                            }
                         }
                     }
                     else {
-                        if (accFft5 < 133.17) {
-                            activity = "transport";
-                        }
-                        else {
-                            activity = "walking";
-                        }
+                        activity = "transport";
                     }
+
                     long toc = System.nanoTime();
                     Log.d(TAG, String.format("Transportation mode: %s, time used = %d ns", activity, (toc - tic)));
                     // Log.d(TAG, String.format("There are %d threads", numThreads));

@@ -227,11 +227,11 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 //                Sensor stepCounter = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
 //                sensorManager.registerListener(mSensorListener, stepCounter, SensorManager.SENSOR_DELAY_FASTEST);
 //
-//                // location update
-//                if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-//                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mLocationListener);
-//                if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
-//                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
+                // location update
+                if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
+                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mLocationListener);
+                if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
+                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
             }
         });
 
@@ -244,7 +244,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
 //                // Stop data collection on phone
 //                sensorManager.unregisterListener(mSensorListener);
-//                locationManager.removeUpdates(mLocationListener);
+                locationManager.removeUpdates(mLocationListener);
             }
         });
 
@@ -312,21 +312,24 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
     @Override
     public void onLocationChanged(Location location) {
-        //Log.i("GPS", location.getTime() + "," + location.getLatitude() + "," + location.getLongitude() + "," + location.getAltitude() + "," + location.getProvider());
+        Log.i("GPS", location.getTime() + "," + location.getLatitude() + "," + location.getLongitude() + "," + location.getAltitude() + "," + location.getProvider());
         int gpsType = (location.getProvider().equals(LocationManager.GPS_PROVIDER)) ? 0 : 1;
         if (gpsType == 0)
             gpsGCnt++;
         else
             gpsNCnt++;
-        try {
-            loggerGps.write(location.getTime() + "," + location.getLatitude() + "," + location.getLongitude() + "," + location.getAltitude() + "," + location.getAccuracy() + "," + location.getSpeed() + "," + gpsType);
-            loggerGps.newLine();
-            loggerGps.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
         textGps.setStr("GPS from gps:" + gpsGCnt + "  from network:" + gpsNCnt);
+
+//        try {
+//            loggerGps.write(location.getTime() + "," + location.getLatitude() + "," + location.getLongitude() + "," + location.getAltitude() + "," + location.getAccuracy() + "," + location.getSpeed() + "," + gpsType);
+//            loggerGps.newLine();
+//            loggerGps.flush();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+
+        // Notify the watch
+        remoteSensorManager.sendLocationUpdate(location);
     }
 
     @Override
