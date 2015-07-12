@@ -10,9 +10,13 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.BatteryManager;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.os.PowerManager;
 import android.util.Log;
+
+import edu.ucla.nesl.wearcontext.shared.ClientPaths;
 import edu.ucla.nesl.wearcontext.shared.TimeString;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -70,51 +74,90 @@ public class SensorService extends Service{
         return null;
     }
 
+    private boolean handlerFlag = true;
+
+    private Handler wakeupHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            try {
+                IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+                Intent batteryStatus = context.registerReceiver(null, ifilter);
+                int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+                int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+                float batteryPct = level / (float)scale;
+
+                if (batteryPct > 0.2) {
+                    outputBattery.append(String.valueOf(System.currentTimeMillis()) + "," + String.valueOf(batteryPct) + "\n");
+                    outputBattery.flush();
+
+                    Log.d(TAG, "Log battery level = " + batteryPct);
+                }
+                else {
+                    outputBattery.flush();
+                    outputBattery.close();
+                    outputBattery = null;
+                }
+
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (handlerFlag) {
+                sendEmptyMessageDelayed(0, 1000 * 60);
+            }
+        }
+    };
+
     protected void startMeasurement() {
         Log.d(TAG, "start measurement in wear: SensorService");
 
         client.sendSensorData(-1, 1, 111, new float[]{1.0f});
         v.vibrate(1000);
 
-        String prefix = "/storage/sdcard0/sensor_data/battery_" + timeString.currentTimeForFile();
+        String prefix = "/storage/sdcard0/sensor_data/battery_idle_on_" + timeString.currentTimeForFile();
         try {
             outputBattery = new BufferedWriter(new FileWriter(prefix + ".txt"));
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        if (logToFile) {
-            try {
-                outputAcc = new BufferedWriter(new FileWriter(prefix + ".wear.acc"));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+//        if (logToFile) {
+//            try {
+//                outputAcc = new BufferedWriter(new FileWriter(prefix + ".wear.acc"));
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }
 
         // Wakelock
         PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         wl = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SensorCollector");
         wl.acquire();
 
-        mSensorManager = ((SensorManager) getSystemService(SENSOR_SERVICE));
-        Sensor accelerometerSensor = mSensorManager.getDefaultSensor(SENS_ACCELEROMETER);
-        // Register the listener
-        if (mSensorManager != null) {
-            if (accelerometerSensor != null) {
-                mListener = new TransportationModeListener();
-                mSensorManager.registerListener(mListener, accelerometerSensor, SensorManager.SENSOR_DELAY_FASTEST);
-            } else {
-                Log.w(TAG, "No Accelerometer found");
-            }
-        }
+        handlerFlag = true;
+        wakeupHandler.sendEmptyMessage(0);
+
+//        mSensorManager = ((SensorManager) getSystemService(SENSOR_SERVICE));
+//        Sensor accelerometerSensor = mSensorManager.getDefaultSensor(SENS_ACCELEROMETER);
+//        // Register the listener
+//        if (mSensorManager != null) {
+//            if (accelerometerSensor != null) {
+//                mListener = new TransportationModeListener();
+//                mSensorManager.registerListener(mListener, accelerometerSensor, SensorManager.SENSOR_DELAY_FASTEST);
+//            } else {
+//                Log.w(TAG, "No Accelerometer found");
+//            }
+//        }
     }
 
     private void stopMeasurement() {
         client.sendSensorData(-2, 2, 2, new float[]{2.0f});
         v.vibrate(200);
 
-        mSensorManager.unregisterListener(mListener);
-        mSensorManager = null;
+        handlerFlag = false;
+
+//        mSensorManager.unregisterListener(mListener);
+//        mSensorManager = null;
 
         if (outputBattery != null) {
             try {
@@ -124,16 +167,16 @@ public class SensorService extends Service{
                 e.printStackTrace();
             }
         }
-
-        if (logToFile) {
-            try {
-                outputAcc.flush();
-                outputAcc.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        }
+//
+//        if (logToFile) {
+//            try {
+//                outputAcc.flush();
+//                outputAcc.close();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//
+//        }
         wl.release();
     }
 
