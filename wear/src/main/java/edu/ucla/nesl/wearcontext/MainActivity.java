@@ -27,20 +27,22 @@ public class MainActivity extends Activity {
         client = DeviceClient.getInstance(this);
         random = new Random();
 
+        alarm.setAlarm(this);
+
 //        // TODO: Keep the Wear screen always on (for testing only!)
 //        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     public void onBeep(View view) {
         client.sendSensorData(0, 1, 555, new float[]{random.nextFloat()});
-        if (mAlarmSet == false) {
-            alarm.setAlarm(this);
-            mAlarmSet = true;
-        }
-        else {
-            alarm.cancelAlarm(this);
-            mAlarmSet = false;
-        }
+//        if (mAlarmSet == false) {
+//            alarm.setAlarm(this);
+//            mAlarmSet = true;
+//        }
+//        else {
+//            alarm.cancelAlarm(this);
+//            mAlarmSet = false;
+//        }
     }
 
     @Override
