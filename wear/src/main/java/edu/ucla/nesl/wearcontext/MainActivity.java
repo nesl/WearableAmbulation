@@ -7,6 +7,8 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+
+import java.nio.ByteBuffer;
 import java.util.Random;
 
 import edu.ucla.nesl.wearcontext.alarm.InferenceAlarmReceiver;
@@ -34,7 +36,7 @@ public class MainActivity extends Activity {
     }
 
     public void onBeep(View view) {
-        client.sendSensorData(0, 1, 555, new float[]{random.nextFloat()});
+        client.sendSensorData(555, ByteBuffer.allocate(4).putFloat(random.nextFloat()).array());
 //        if (mAlarmSet == false) {
 //            alarm.setAlarm(this);
 //            mAlarmSet = true;

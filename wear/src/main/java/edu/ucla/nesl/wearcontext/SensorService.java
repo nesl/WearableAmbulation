@@ -15,9 +15,6 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.PowerManager;
 import android.util.Log;
-
-import edu.ucla.nesl.wearcontext.shared.ClientPaths;
-import edu.ucla.nesl.wearcontext.shared.TimeString;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -30,11 +27,9 @@ public class SensorService extends Service{
 
     private SensorManager mSensorManager;
     private TransportationModeListener mListener;
-    private DeviceClient client;
     private PowerManager.WakeLock wl;
     private Vibrator v;
     private BufferedWriter outputAcc, outputBattery;
-    private TimeString timeString = new TimeString();
     private boolean logToFile = false;
     private Context context = this;
 
@@ -49,24 +44,22 @@ public class SensorService extends Service{
     public void onCreate() {
         super.onCreate();
 
-        client = DeviceClient.getInstance(this);
-
         Notification.Builder builder = new Notification.Builder(this);
         builder.setContentTitle("Wear Context");
         builder.setContentText("Activity recognition");
         builder.setSmallIcon(R.drawable.ic_launcher);
 
         startForeground(1, builder.build());
-        v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        // v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
-        startMeasurement();
+        // startMeasurement();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
 
-        stopMeasurement();
+        // stopMeasurement();
     }
 
     @Override
@@ -110,11 +103,9 @@ public class SensorService extends Service{
 
     protected void startMeasurement() {
         Log.d(TAG, "start measurement in wear: SensorService");
-
-        client.sendSensorData(-1, 1, 111, new float[]{1.0f});
         v.vibrate(1000);
 
-        String prefix = "/storage/sdcard0/sensor_data/battery_" + timeString.currentTimeForFile();
+        String prefix = "/storage/sdcard0/sensor_data/battery_" + System.currentTimeMillis();
 
         try {
             outputBattery = new BufferedWriter(new FileWriter(prefix + ".txt"));
@@ -153,7 +144,7 @@ public class SensorService extends Service{
     }
 
     private void stopMeasurement() {
-        client.sendSensorData(-2, 2, 2, new float[]{2.0f});
+        Log.d(TAG, "stop measurement in wear: SensorService");
         v.vibrate(200);
 
 //        // Stop battery log
@@ -228,8 +219,6 @@ public class SensorService extends Service{
                     // Log battery level every minute
                     resCount++;
                     if (resCount >= 60) {
-                        client.sendSensorData(-8, 8, 888, new float[]{8.0f});
-
                         try {
                             IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
                             Intent batteryStatus = context.registerReceiver(null, ifilter);

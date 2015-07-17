@@ -5,4 +5,5 @@ public class ClientPaths {
     public static final String STOP_MEASUREMENT = "/stop";
     public static final String BEACON = "/beacon";
     public static final String LOCATION_UPDATE = "/location";
+    public static final String TEST = "/t";
 }

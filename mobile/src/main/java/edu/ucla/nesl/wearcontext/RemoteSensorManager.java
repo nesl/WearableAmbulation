@@ -78,7 +78,7 @@ public class RemoteSensorManager {
 
     public void startMeasurement() {
         handlerFlag = true;
-        wakeupHandler.sendEmptyMessage(0);
+        // wakeupHandler.sendEmptyMessage(0);
         executorService.submit(new Runnable() {
             @Override
             public void run() {

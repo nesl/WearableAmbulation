@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 
+import edu.ucla.nesl.wearcontext.shared.ClientPaths;
 import edu.ucla.nesl.wearcontext.shared.DataMapKeys;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
@@ -47,7 +48,7 @@ public class SensorReceiverService extends WearableListenerService {
                 Uri uri = dataItem.getUri();
                 String path = uri.getPath();
 
-                if (path.startsWith("/sensors/")) {
+                if (path.equals(ClientPaths.TEST)) {
                     unpackSensorData(
                         Integer.parseInt(uri.getLastPathSegment()),
                         DataMapItem.fromDataItem(dataItem).getDataMap()
@@ -58,15 +59,8 @@ public class SensorReceiverService extends WearableListenerService {
     }
 
     private void unpackSensorData(int sensorType, DataMap dataMap) {
-//        int accuracy = dataMap.getInt(DataMapKeys.ACCURACY);
-//        long timestamp = dataMap.getLong(DataMapKeys.TIMESTAMP);
-        float[] values = dataMap.getFloatArray(DataMapKeys.VALUES);
-        Log.d(TAG, "Received sensor data " + sensorType + " = " + Arrays.toString(values));
-        Intent intent = new Intent();
-        intent.setAction("nesl.wear.sensordata");
-        intent.putExtra("t", sensorType);
-//            intent.putExtra("ts", timestamp);
-//            intent.putExtra("d",Arrays.toString(values));
-        this.sendBroadcast(intent);
+        long timestamp = dataMap.getLong(DataMapKeys.TIMESTAMP);
+        byte[] values = dataMap.getByteArray(DataMapKeys.VALUES);
+        Log.d(TAG, "Received sensor data, ts=" + timestamp + ", value=" + Arrays.toString(values));
     }
 }

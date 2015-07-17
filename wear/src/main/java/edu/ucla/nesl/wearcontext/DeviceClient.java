@@ -2,8 +2,8 @@ package edu.ucla.nesl.wearcontext;
 
 import android.content.Context;
 import android.util.Log;
-import android.util.SparseLongArray;
 
+import edu.ucla.nesl.wearcontext.shared.ClientPaths;
 import edu.ucla.nesl.wearcontext.shared.DataMapKeys;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -12,8 +12,6 @@ import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
-
-import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -32,66 +30,27 @@ public class DeviceClient {
         return instance;
     }
 
-    private Context context;
     private GoogleApiClient googleApiClient;
     private ExecutorService executorService;
-    private int filterId;
-
-    private SparseLongArray lastSensorData;
 
     private DeviceClient(Context context) {
-        this.context = context;
-
         googleApiClient = new GoogleApiClient.Builder(context).addApi(Wearable.API).build();
-
         executorService = Executors.newCachedThreadPool();
-        lastSensorData = new SparseLongArray();
     }
 
-    public void setSensorFilter(int filterId) {
-        Log.d(TAG, "Now filtering by sensor: " + filterId);
-
-        this.filterId = filterId;
-    }
-
-    public void sendSensorData(final int sensorType, final int accuracy, final long timestamp, final float[] values) {
-        long t = System.currentTimeMillis();
-
-        long lastTimestamp = lastSensorData.get(sensorType);
-        long timeAgo = t - lastTimestamp;
-
-        if (lastTimestamp != 0) {
-            if (filterId == sensorType && timeAgo < 100) {
-                return;
-            }
-
-            if (filterId != sensorType && timeAgo < 3000) {
-                return;
-            }
-        }
-
-        lastSensorData.put(sensorType, t);
-
+    public void sendSensorData(final long timestamp, final byte[] values) {
         executorService.submit(new Runnable() {
             @Override
             public void run() {
-                sendSensorDataInBackground(sensorType, accuracy, timestamp, values);
+                sendSensorDataInBackground(timestamp, values);
             }
         });
     }
 
-    private void sendSensorDataInBackground(int sensorType, int accuracy, long timestamp, float[] values) {
-        if (sensorType == filterId) {
-            Log.i(TAG, "Sensor " + sensorType + " = " + Arrays.toString(values));
-        } else {
-            Log.d(TAG, "Sensor " + sensorType + " = " + Arrays.toString(values));
-        }
-
-        PutDataMapRequest dataMap = PutDataMapRequest.create("/sensors/" + sensorType);
-
-        dataMap.getDataMap().putInt(DataMapKeys.ACCURACY, accuracy);
+    private void sendSensorDataInBackground(long timestamp, byte[] values) {
+        PutDataMapRequest dataMap = PutDataMapRequest.create(ClientPaths.TEST);
         dataMap.getDataMap().putLong(DataMapKeys.TIMESTAMP, timestamp);
-        dataMap.getDataMap().putFloatArray(DataMapKeys.VALUES, values);
+        dataMap.getDataMap().putByteArray(DataMapKeys.VALUES, values);
 
         PutDataRequest putDataRequest = dataMap.asPutDataRequest();
         send(putDataRequest);
@@ -103,7 +62,6 @@ public class DeviceClient {
         }
 
         ConnectionResult result = googleApiClient.blockingConnect(CLIENT_CONNECTION_TIMEOUT, TimeUnit.MILLISECONDS);
-
         return result.isSuccess();
     }
 
@@ -112,7 +70,7 @@ public class DeviceClient {
             Wearable.DataApi.putDataItem(googleApiClient, putDataRequest).setResultCallback(new ResultCallback<DataApi.DataItemResult>() {
                 @Override
                 public void onResult(DataApi.DataItemResult dataItemResult) {
-                    Log.v(TAG, "Sending sensor data: " + dataItemResult.getStatus().isSuccess());
+                    Log.v(TAG, "Sending data message: " + dataItemResult.getStatus().isSuccess());
                 }
             });
         }
