@@ -62,6 +62,7 @@ public class RemoteSensorManager {
                 .addApi(Wearable.API)
                 .build();
 
+        Wearable.DataApi.addListener(googleApiClient, new SensorReceiverService());
 
         this.executorService = Executors.newCachedThreadPool();
     }

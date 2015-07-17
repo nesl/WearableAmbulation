@@ -183,7 +183,7 @@ public class SensorService extends Service{
 
         @Override
         public void onSensorChanged(SensorEvent event) {
-            // client.sendSensorData(event.sensor.getType(), event.accuracy, event.timestamp, event.values);
+            // client.sendData(event.sensor.getType(), event.accuracy, event.timestamp, event.values);
             // Log.d(TAG, "onSensorDataChanged");
             if (event.sensor.getType() == SENS_ACCELEROMETER) {
                 float [] values = event.values;

@@ -1,11 +1,12 @@
 package edu.ucla.nesl.wearcontext;
 
-import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 
 import edu.ucla.nesl.wearcontext.shared.ClientPaths;
 import edu.ucla.nesl.wearcontext.shared.DataMapKeys;
+
+import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.DataItem;
@@ -16,28 +17,28 @@ import com.google.android.gms.wearable.WearableListenerService;
 
 import java.util.Arrays;
 
-public class SensorReceiverService extends WearableListenerService {
+public class SensorReceiverService implements DataApi.DataListener {
     private static final String TAG = "WearContext/Mobile/SensorReceiverService";
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        Log.i(TAG, "Started");
-    }
-
-    @Override
-    public void onPeerConnected(Node peer) {
-        super.onPeerConnected(peer);
-
-        Log.i(TAG, "Connected: " + peer.getDisplayName() + " (" + peer.getId() + ")");
-    }
-
-    @Override
-    public void onPeerDisconnected(Node peer) {
-        super.onPeerDisconnected(peer);
-
-        Log.i(TAG, "Disconnected: " + peer.getDisplayName() + " (" + peer.getId() + ")");
-    }
+//    @Override
+//    public void onCreate() {
+//        super.onCreate();
+//        Log.i(TAG, "Started");
+//    }
+//
+//    @Override
+//    public void onPeerConnected(Node peer) {
+//        super.onPeerConnected(peer);
+//
+//        Log.i(TAG, "Connected: " + peer.getDisplayName() + " (" + peer.getId() + ")");
+//    }
+//
+//    @Override
+//    public void onPeerDisconnected(Node peer) {
+//        super.onPeerDisconnected(peer);
+//
+//        Log.i(TAG, "Disconnected: " + peer.getDisplayName() + " (" + peer.getId() + ")");
+//    }
 
     @Override
     public void onDataChanged(DataEventBuffer dataEvents) {
@@ -49,18 +50,15 @@ public class SensorReceiverService extends WearableListenerService {
                 String path = uri.getPath();
 
                 if (path.equals(ClientPaths.TEST)) {
-                    unpackSensorData(
-                        Integer.parseInt(uri.getLastPathSegment()),
-                        DataMapItem.fromDataItem(dataItem).getDataMap()
-                    );
+                    unpackSensorData(DataMapItem.fromDataItem(dataItem).getDataMap());
                 }
             }
         }
     }
 
-    private void unpackSensorData(int sensorType, DataMap dataMap) {
+    private void unpackSensorData(DataMap dataMap) {
         long timestamp = dataMap.getLong(DataMapKeys.TIMESTAMP);
         byte[] values = dataMap.getByteArray(DataMapKeys.VALUES);
-        Log.d(TAG, "Received sensor data, ts=" + timestamp + ", value=" + Arrays.toString(values));
+        Log.d(TAG, "Received sensor data, ts=" + timestamp + ", size=" + values.length);
     }
 }
