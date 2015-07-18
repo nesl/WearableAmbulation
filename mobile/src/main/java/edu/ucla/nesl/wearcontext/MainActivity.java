@@ -45,7 +45,6 @@ public class MainActivity extends ActionBarActivity implements LocationListener 
 
         remoteSensorManager = RemoteSensorManager.getInstance(this);
 
-
         Button button1 = (Button) findViewById(R.id.button1);
         button1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -73,12 +72,14 @@ public class MainActivity extends ActionBarActivity implements LocationListener 
     protected void onResume() {
         super.onResume();
         Log.i(TAG, "onResume() called");
+        remoteSensorManager.connect();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         Log.i(TAG, "onPause() called");
+        remoteSensorManager.disconnect();
     }
 
     @Override

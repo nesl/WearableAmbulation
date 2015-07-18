@@ -18,6 +18,7 @@ import android.util.Log;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import edu.ucla.nesl.wearcontext.DeviceClient;
 
@@ -40,14 +41,17 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
     private final static int SENSING_PERIOD = 1000 * 90;
     private final static int ALARM_INTERVAL = 1000 * 60 * 5; // Millisec * Second * Minute
 
-    private final static InferenceType mType = InferenceType.DataTransmission;
+    private final static InferenceType mType = InferenceType.WearAcc;
     private final static boolean logBattery = false;
     private final static boolean featureCalc = false;
     private final static boolean classifyCalc = false;
 
     private SensorManager mSensorManager;
     private TransportationModeListener mListener;
+    private DeviceClient mClient;
     private static int numThreads;
+    private static int resCount = 0;
+
     public static double locSpeed;
     public static double locAccuracy;
 
@@ -59,6 +63,8 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
         PowerManager mPowerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         PowerManager.WakeLock wl = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "inf_wakelock");
         wl.acquire();
+
+        mClient = DeviceClient.getInstance(context);
 
         Log.i(TAG, "InferenceAlarmReceiver received, mType=" + mType + ", feature=" + featureCalc + ", classify=" + classifyCalc);
 
@@ -101,12 +107,11 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
         if (mType == InferenceType.DataTransmission) {
             // Test sending data from watch to phone
             Log.i(TAG, "Sending data via BLE...");
-            DeviceClient client = DeviceClient.getInstance(context);
 
-            for (int i = 0; i < 90; i++) {
+            for (int i = 0; i < 30; i++) {
                 long tic = System.currentTimeMillis();
                 for (int ii = 0; ii < 10; ii++) {
-                    client.sendSensorData(System.currentTimeMillis(), BYTE_DATA_1K);
+                    mClient.sendSensorData(System.currentTimeMillis(), BYTE_DATA_1K);
                 }
                 long tac = System.currentTimeMillis();
                 Log.i(TAG, "Sending data finished, time=" + (tac - tic) + "ms");
@@ -225,6 +230,28 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
                         return;
                     }
                 }
+                else {
+                    // Send raw data over bluetooth
+                    long cur = System.currentTimeMillis();
+                    // 1s classification window
+                    if (cur - start >= 1000) {
+                        Log.i(TAG, "sync raw data...");
+
+                        long tic = System.nanoTime();
+
+                        ByteBuffer buf = ByteBuffer.allocate(8 * count);
+                        for (int i = 0; i < count; i++) {
+                            buf.putDouble(data[i]);
+                        }
+                        mClient.sendSensorData(start, buf.array());
+
+                        long toc = System.nanoTime();
+                        Log.d(TAG, String.format("finished. time=%d ns", (toc - tic)));
+
+                        start = cur;
+                        count = 0;
+                    }
+                }
 
                 data[count] = totalForce;
                 count++;
@@ -252,7 +279,7 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
                 synchronized(lock) {
                     long tic = System.nanoTime();
 
-                    String activity = null;
+                    int activity = -1;
                     int n = mData.length;
 
                     // Features: mean, var, and fft(5)
@@ -296,27 +323,27 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
                                 if (wear_var <= 0.00882150046527) {
                                     if (wear_rms <= 9.99174118042) {
                                         if (wear_var <= 0.00562749989331) {
-                                            activity = "still";
+                                            activity = 1;
                                         }
                                     } else {
                                         if (wear_range <= 0.393983006477) {
-                                            activity = "walking";
+                                            activity = 2;
                                         } else {
                                             if (wear_range <= 0.402398496866) {
-                                                activity = "transport";
+                                                activity = 3;
                                             } else {
-                                                activity = "walking";
+                                                activity = 2;
                                             }
                                         }
                                     }
                                 } else {
                                     if (wear_rms <= 10.0294046402) {
-                                        activity = "transport";
+                                        activity = 3;
                                     } else {
                                         if (wear_var <= 0.143972992897) {
-                                            activity = "walking";
+                                            activity = 2;
                                         } else {
-                                            activity = "transport";
+                                            activity = 3;
                                         }
                                     }
                                 }
@@ -325,40 +352,55 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
                                     if (wear_var <= 2.39609098434) {
                                         if (wear_range <= 5.30206346512) {
                                             if (wear_range <= 3.69736599922) {
-                                                activity = "transport";
+                                                activity = 3;
                                             } else {
-                                                activity = "walking";
+                                                activity = 2;
                                             }
                                         } else {
-                                            activity = "transport";
+                                            activity = 3;
                                         }
                                     } else {
                                         if (wear_range <= 10.4032249451) {
-                                            activity = "walking";
+                                            activity = 2;
                                         } else {
                                             if (wear_var <= 11.2173519135) {
-                                                activity = "transport";
+                                                activity = 3;
                                             } else {
-                                                activity = "still";
+                                                activity = 1;
                                             }
                                         }
                                     }
                                 } else {
                                     if (wear_range <= 12.9299907684) {
                                         if (wear_var <= 1.36739695072) {
-                                            activity = "transport";
+                                            activity = 3;
                                         } else {
-                                            activity = "walking";
+                                            activity = 2;
                                         }
                                     } else {
                                         if (wear_fft8 <= 13.5743255615) {
-                                            activity = "walking";
+                                            activity = 2;
                                         } else {
-                                            activity = "transport";
+                                            activity = 3;
                                         }
                                     }
                                 }
                             }
+
+                            // Send classification result over bluetooth
+                            mClient.sendSensorData(tic, ByteBuffer.allocate(4).putInt(activity).array());
+                            Log.i(TAG, "sync result labels...");
+                        }
+                        else {
+                            // Send features over bluetooth
+                            ByteBuffer buf = ByteBuffer.allocate(8 * 5);
+                            buf.putDouble(wear_var);
+                            buf.putDouble(wear_fft8);
+                            buf.putDouble(wear_fft5);
+                            buf.putDouble(wear_rms);
+                            buf.putDouble(wear_range);
+                            mClient.sendSensorData(tic, buf.array());
+                            Log.i(TAG, "sync features...");
                         }
                     }
                     else if (mType == InferenceType.WearAccGPS) {
@@ -382,63 +424,63 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
                                     if (acc < 19.5) {
                                         if (wear_var < 0.06) {
                                             if (wear_mean < 9.99) {
-                                                activity = "transport";
+                                                activity = 3;
                                             } else {
-                                                activity = "walking";
+                                                activity = 2;
                                             }
                                         } else {
                                             if (acc < 10.5) {
-                                                activity = "transport";
+                                                activity = 3;
                                             } else {
-                                                activity = "walking";
+                                                activity = 2;
                                             }
                                         }
                                     } else {
                                         if (acc < 28.35) {
                                             if (speed < 0.25) {
-                                                activity = "still";
+                                                activity = 1;
                                             } else {
-                                                activity = "transport";
+                                                activity = 3;
                                             }
                                         } else {
                                             if (speed < 0.25) {
-                                                activity = "walking";
+                                                activity = 2;
                                             } else {
-                                                activity = "transport";
+                                                activity = 3;
                                             }
                                         }
                                     }
                                 } else {
                                     if (wear_fft5 < 130.7) {
                                         if (speed < 0.13) {
-                                            activity = "walking";
+                                            activity = 2;
                                         } else {
                                             if (acc < 118) {
-                                                activity = "transport";
+                                                activity = 3;
                                             } else {
-                                                activity = "still";
+                                                activity = 1;
                                             }
                                         }
                                     } else {
                                         if (acc < 8.5) {
-                                            activity = "walking";
+                                            activity = 2;
                                         } else {
                                             if (acc < 10.5) {
-                                                activity = "still";
+                                                activity = 1;
                                             } else {
-                                                activity = "walking";
+                                                activity = 2;
                                             }
                                         }
                                     }
                                 }
                             } else {
-                                activity = "transport";
+                                activity = 3;
                             }
                         }
                     }
 
                     long toc = System.nanoTime();
-                    //Log.d(TAG, String.format("Transportation mode: %s, time used = %d ns", activity, (toc - tic)));
+                    Log.d(TAG, String.format("res=%d, time=%d ns", activity, (toc - tic)));
                     // Log.d(TAG, String.format("There are %d threads", numThreads));
                     numThreads--;
                 }
