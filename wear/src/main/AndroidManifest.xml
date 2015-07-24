@@ -41,11 +41,6 @@
         <service android:name=".SensorService" />
 
         <receiver android:name=".alarm.InferenceAlarmReceiver"></receiver>
-        <receiver android:name=".alarm.InferenceAlarmStarter">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"></action>
-            </intent-filter>
-        </receiver>
 
     </application>
 
