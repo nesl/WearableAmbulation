@@ -10,7 +10,11 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.BatteryManager;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.util.Log;
@@ -30,7 +34,7 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
         PhoneAccGPS
     }
 
-    private final static byte[] BYTE_DATA_1K = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127};
+    // private final static byte[] BYTE_DATA_1K = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127};
 
     private final static String TAG = "WearContext/Mobile/InferenceAlarmReceiver";
     private final static long timestamp = System.currentTimeMillis();
@@ -40,11 +44,14 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
 
     private final static InferenceType mType = InferenceType.PhoneAccGPS;
     private final static boolean logBattery = false;
-    private final static boolean featureCalc = false;
-    private final static boolean classifyCalc = false;
+    private final static boolean featureCalc = true;
+    private final static boolean classifyCalc = true;
 
     private SensorManager mSensorManager;
     private TransportationModeListener mListener;
+    private LocationManager mLocationManager;
+    private LocationListener mLocationListener;
+
     private static int numThreads;
     private static int resCount = 0;
 
@@ -53,6 +60,8 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
 
     private static final Object lock = new Object();
     public static final Object locLock = new Object();
+
+    private double gps_accuracy, gps_speed;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -102,12 +111,19 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
             // Start inference using only acc for 1 minute (10s for test)
             mSensorManager = ((SensorManager) context.getSystemService(Context.SENSOR_SERVICE));
             Sensor accelerometerSensor = mSensorManager.getDefaultSensor(SENS_ACCELEROMETER);
+            mLocationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
             // Register the listener
             if (mSensorManager != null) {
                 if (accelerometerSensor != null) {
                     mListener = new TransportationModeListener(mType);
                     mSensorManager.registerListener(mListener, accelerometerSensor, SensorManager.SENSOR_DELAY_FASTEST);
+
+                    // location update
+                    if (mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
+                        mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mListener);
+                    if (mLocationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
+                        mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mListener);
 
 
                 } else {
@@ -122,6 +138,7 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
                 public void run() {
                     mSensorManager.unregisterListener(mListener);
                     mSensorManager = null;
+                    mLocationManager.removeUpdates(mListener);
                     Log.i(TAG, "InferenceAlarmReceiver execution finished.");
                 }
             }, SENSING_PERIOD);
@@ -147,7 +164,7 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
         Log.i(TAG, "Alarm cancelled.");
     }
 
-    private class TransportationModeListener implements SensorEventListener {
+    private class TransportationModeListener implements SensorEventListener, LocationListener {
         InferenceType mType;
         int count = 0;
         Thread thread;
@@ -217,6 +234,30 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
 
         }
 
+        @Override
+        public void onLocationChanged(Location location) {
+            Log.i(TAG, location.getTime() + "," + location.getLatitude() + "," + location.getLongitude() + "," + location.getAltitude() + "," + location.getProvider());
+            synchronized (locLock) {
+                gps_accuracy = location.getAccuracy();
+                gps_speed = location.getSpeed();
+            }
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+        }
+
         private class Worker implements Runnable {
             double[] mData;
 
@@ -229,114 +270,135 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
                 synchronized(lock) {
                     long tic = System.nanoTime();
 
-                    int activity = -1;
+                    String activity = "null";
+
                     int n = mData.length;
 
-                    // Features: mean, var, and fft(5)
-                    double wear_sum = 0.0;
-                    double wear_mean = 0.0;
-                    double wear_var = 0.0;
-                    double wear_rms = 0.0;
-                    double wear_range = 0.0;
-                    double wear_min = Double.MAX_VALUE;
-                    double wear_max = Double.MIN_VALUE;
-                    double wear_fft5 = 0.0;
-                    double wear_fft8 = 0.0;
+                    // Features: var, energy, fft(3), and fft(5)
+                    double phone_sum = 0.0;
+                    double phone_mean = 0.0;
+                    double phone_var = 0.0;
+                    double phone_energy = 0.0;
+                    double phone_fft3 = 0.0;
+                    double phone_fft8 = 0.0;
 
                     // Get mean, var, rms, range
                     for (int i = 0; i < n; i++) {
                         double temp = mData[i];
-                        wear_sum += temp;
-                        wear_rms += Math.pow(temp, 2.0);
-                        wear_min = Math.min(wear_min, temp);
-                        wear_max = Math.max(wear_max, temp);
+                        phone_sum += temp;
+                        phone_energy += temp * temp;
                     }
-                    wear_mean = wear_sum / n;
+                    phone_mean = phone_sum / n;
+                    phone_energy = Math.sqrt(phone_energy);
 
-                    wear_range = Math.abs(wear_max - wear_min);
-
-                    wear_rms = Math.sqrt(wear_rms / n);
-
-                    wear_sum = 0.0;
+                    phone_sum = 0.0;
                     for (int i = 0; i < n; i++){
-                        wear_sum += Math.pow((mData[i] - wear_mean), 2.0);
+                        phone_sum += Math.pow((mData[i] - phone_mean), 2.0);
                     }
-                    wear_var = wear_sum / n;
+                    phone_var = phone_sum / n;
 
                     // Get fft
-                    wear_fft8 = goertzel(mData, 8., n);
+                    phone_fft3 = goertzel(mData, 3., n);
+                    phone_fft8 = goertzel(mData, 8., n);
 
-                    if (mType == InferenceType.PhoneAccGPS) {
-                        if (classifyCalc) {
-                            // Decision tree (acc only) from sklearn, max = 5
-                            if (wear_rms <= 10.3000907898) {
-                                if (wear_var <= 0.00882150046527) {
-                                    if (wear_rms <= 9.99174118042) {
-                                        if (wear_var <= 0.00562749989331) {
-                                            activity = 1;
+                    if (classifyCalc) {
+                        if (mType == InferenceType.WearPhoneAcc) {
+                            // Decision tree (wear + phone acc) from sklearn, max = 5
+                        }
+                        else if (mType == InferenceType.PhoneAccGPS) {
+                            synchronized (locLock) {
+                                // Decision tree (phone acc + gps) from sklearn, max = 5
+                                if ( gps_accuracy <= 19.5 ) {
+                                    if ( phone_fft8 <= 13.6914787292 ) {
+                                        if ( gps_speed <= 0.625 ) {
+                                            if ( phone_fft8 <= 0.0313805006444 ) {
+                                                if ( phone_var <= 0.00288949999958 ) {
+                                                    activity = "still";
+                                                } else {
+                                                    activity = "transport";
+                                                }
+                                            } else {
+                                                if ( gps_accuracy <= 8.5 ) {
+                                                    activity = "transport";
+                                                } else {
+                                                    activity = "walking";
+                                                }
+                                            }
+                                        } else {
+                                            if ( phone_fft3 <= 121.535675049 ) {
+                                                activity = "transport";
+                                            } else {
+                                                if ( gps_speed <= 3.55039048195 ) {
+                                                    activity = "walking";
+                                                } else {
+                                                    activity = "transport";
+                                                }
+                                            }
                                         }
                                     } else {
-                                        if (wear_range <= 0.393983006477) {
-                                            activity = 2;
-                                        } else {
-                                            if (wear_range <= 0.402398496866) {
-                                                activity = 3;
+                                        if ( gps_speed <= 4.375 ) {
+                                            if ( phone_fft3 <= 756.672546387 ) {
+                                                activity = "walking";
                                             } else {
-                                                activity = 2;
+                                                if ( gps_speed <= 1.375 ) {
+                                                    activity = "walking";
+                                                } else {
+                                                    activity = "transport";
+                                                }
+                                            }
+                                        } else {
+                                            if ( gps_speed <= 5.375 ) {
+                                                if ( gps_accuracy <= 4.5 ) {
+                                                    activity = "still";
+                                                } else {
+                                                    activity = "transport";
+                                                }
+                                            } else {
+                                                activity = "transport";
                                             }
                                         }
                                     }
                                 } else {
-                                    if (wear_rms <= 10.0294046402) {
-                                        activity = 3;
-                                    } else {
-                                        if (wear_var <= 0.143972992897) {
-                                            activity = 2;
-                                        } else {
-                                            activity = 3;
-                                        }
-                                    }
-                                }
-                            } else {
-                                if (wear_rms <= 10.8408107758) {
-                                    if (wear_var <= 2.39609098434) {
-                                        if (wear_range <= 5.30206346512) {
-                                            if (wear_range <= 3.69736599922) {
-                                                activity = 3;
+                                    if (phone_energy <= 143.665679932) {
+                                        if (gps_speed <= 0.125) {
+                                            if (phone_energy <= 139.990478516) {
+                                                activity = "still";
                                             } else {
-                                                activity = 2;
+                                                if (phone_var <= 0.013386500068) {
+                                                    activity = "walking";
+                                                } else {
+                                                    activity = "still";
+                                                }
                                             }
                                         } else {
-                                            activity = 3;
-                                        }
-                                    } else {
-                                        if (wear_range <= 10.4032249451) {
-                                            activity = 2;
-                                        } else {
-                                            if (wear_var <= 11.2173519135) {
-                                                activity = 3;
+                                            if (gps_accuracy <= 39.5) {
+                                                activity = "transport";
                                             } else {
-                                                activity = 1;
+                                                if (gps_accuracy <= 143.5) {
+                                                    activity = "still";
+                                                } else {
+                                                    activity = "walking";
+                                                }
                                             }
                                         }
-                                    }
-                                } else {
-                                    if (wear_range <= 12.9299907684) {
-                                        if (wear_var <= 1.36739695072) {
-                                            activity = 3;
-                                        } else {
-                                            activity = 2;
-                                        }
                                     } else {
-                                        if (wear_fft8 <= 13.5743255615) {
-                                            activity = 2;
+                                        if (phone_fft3 <= 61.3018341064) {
+                                            if (gps_speed <= 9.0) {
+                                                if (gps_accuracy <= 41.6504974365) {
+                                                    activity = "walking";
+                                                } else {
+                                                    activity = "still";
+                                                }
+                                            } else {
+                                                activity = "transport";
+                                            }
                                         } else {
-                                            activity = 3;
+                                            activity = "walking";
+
                                         }
                                     }
                                 }
                             }
-
                         }
                     }
 
