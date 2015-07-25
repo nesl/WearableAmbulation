@@ -20,6 +20,7 @@ public class MainActivity extends ActionBarActivity  {
     private static final String TAG = "WearContext/Mobile/MainActivity";
     private static InferenceAlarmReceiver alarmReceiver;
     private Context context;
+    private RemoteSensorManager remoteSensorManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +30,8 @@ public class MainActivity extends ActionBarActivity  {
         Toolbar toolbar = (Toolbar) findViewById(R.id.my_awesome_toolbar);
         setSupportActionBar(toolbar);
 
+        remoteSensorManager = RemoteSensorManager.getInstance(this);
+
         alarmReceiver = new InferenceAlarmReceiver();
         context = this;
 
@@ -37,6 +40,7 @@ public class MainActivity extends ActionBarActivity  {
             @Override
             public void onClick(View v) {
                 alarmReceiver.setAlarm(context);
+                remoteSensorManager.connect();
             }
         });
 
@@ -45,6 +49,7 @@ public class MainActivity extends ActionBarActivity  {
             @Override
             public void onClick(View v) {
                 alarmReceiver.cancelAlarm(context);
+                remoteSensorManager.disconnect();
             }
         });
 
@@ -55,6 +60,7 @@ public class MainActivity extends ActionBarActivity  {
     protected void onResume() {
         super.onResume();
         Log.i(TAG, "onResume() called");
+
     }
 
     @Override

@@ -21,17 +21,12 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import edu.ucla.nesl.wearcontext.DeviceClient;
+import edu.ucla.nesl.wearcontext.shared.InferenceType;
 
 /**
  * Created by cgshen on 7/12/15.
  */
 public class InferenceAlarmReceiver extends BroadcastReceiver {
-    enum InferenceType {
-        NoInference,
-        DataTransmission,
-        WearAcc,
-        WearAccGPS
-    }
 
     private final static byte[] BYTE_DATA_1K = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127};
 
@@ -204,7 +199,7 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
                 totalForce += Math.pow(accz, 2.0);
                 totalForce = Math.sqrt(totalForce);
 
-                if (featureCalc) {
+
                     long cur = System.currentTimeMillis();
                     // 1s classification window
                     if (cur - start >= 1000) {
@@ -229,29 +224,6 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
                                 + " samples");
                         return;
                     }
-                }
-                else {
-                    // Send raw data over bluetooth
-                    long cur = System.currentTimeMillis();
-                    // 1s classification window
-                    if (cur - start >= 1000) {
-                        Log.i(TAG, "sync raw data...");
-
-                        long tic = System.nanoTime();
-
-                        ByteBuffer buf = ByteBuffer.allocate(8 * count);
-                        for (int i = 0; i < count; i++) {
-                            buf.putDouble(data[i]);
-                        }
-                        mClient.sendSensorData(start, buf.array());
-
-                        long toc = System.nanoTime();
-                        Log.d(TAG, String.format("finished. time=%d ns", (toc - tic)));
-
-                        start = cur;
-                        count = 0;
-                    }
-                }
 
                 data[count] = totalForce;
                 count++;
@@ -282,205 +254,189 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
                     int activity = -1;
                     int n = mData.length;
 
-                    // Features: mean, var, and fft(5)
-                    double wear_sum = 0.0;
-                    double wear_mean = 0.0;
-                    double wear_var = 0.0;
-                    double wear_rms = 0.0;
-                    double wear_range = 0.0;
-                    double wear_min = Double.MAX_VALUE;
-                    double wear_max = Double.MIN_VALUE;
-                    double wear_fft5 = 0.0;
-                    double wear_fft8 = 0.0;
-
-                    // Get mean, var, rms, range
-                    for (int i = 0; i < n; i++) {
-                        double temp = mData[i];
-                        wear_sum += temp;
-                        wear_rms += Math.pow(temp, 2.0);
-                        wear_min = Math.min(wear_min, temp);
-                        wear_max = Math.max(wear_max, temp);
-                    }
-                    wear_mean = wear_sum / n;
-
-                    wear_range = Math.abs(wear_max - wear_min);
-
-                    wear_rms = Math.sqrt(wear_rms / n);
-
-                    wear_sum = 0.0;
-                    for (int i = 0; i < n; i++){
-                        wear_sum += Math.pow((mData[i] - wear_mean), 2.0);
-                    }
-                    wear_var = wear_sum / n;
-
-                    // Get fft
-                    wear_fft8 = goertzel(mData, 8., n);
-
                     if (mType == InferenceType.WearAcc) {
-                        if (classifyCalc) {
-                            // Decision tree (acc only) from sklearn, max = 5
-                            if (wear_rms <= 10.3000907898) {
-                                if (wear_var <= 0.00882150046527) {
-                                    if (wear_rms <= 9.99174118042) {
-                                        if (wear_var <= 0.00562749989331) {
-                                            activity = 1;
-                                        }
-                                    } else {
-                                        if (wear_range <= 0.393983006477) {
-                                            activity = 2;
-                                        } else {
-                                            if (wear_range <= 0.402398496866) {
-                                                activity = 3;
-                                            } else {
-                                                activity = 2;
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    if (wear_rms <= 10.0294046402) {
-                                        activity = 3;
-                                    } else {
-                                        if (wear_var <= 0.143972992897) {
-                                            activity = 2;
-                                        } else {
-                                            activity = 3;
-                                        }
-                                    }
-                                }
-                            } else {
-                                if (wear_rms <= 10.8408107758) {
-                                    if (wear_var <= 2.39609098434) {
-                                        if (wear_range <= 5.30206346512) {
-                                            if (wear_range <= 3.69736599922) {
-                                                activity = 3;
-                                            } else {
-                                                activity = 2;
-                                            }
-                                        } else {
-                                            activity = 3;
-                                        }
-                                    } else {
-                                        if (wear_range <= 10.4032249451) {
-                                            activity = 2;
-                                        } else {
-                                            if (wear_var <= 11.2173519135) {
-                                                activity = 3;
-                                            } else {
+                        // In this case, all data come from the watch
+                        // Watch can choose to send raw data, features, or classification labels
+                        if (featureCalc) {
+                            // Features: mean, var, and fft(5)
+                            double wear_sum = 0.0;
+                            double wear_mean = 0.0;
+                            double wear_var = 0.0;
+                            double wear_rms = 0.0;
+                            double wear_range = 0.0;
+                            double wear_min = Double.MAX_VALUE;
+                            double wear_max = Double.MIN_VALUE;
+                            double wear_fft5 = 0.0;
+                            double wear_fft8 = 0.0;
+
+                            // Get mean, var, rms, range
+                            for (int i = 0; i < n; i++) {
+                                double temp = mData[i];
+                                wear_sum += temp;
+                                wear_rms += Math.pow(temp, 2.0);
+                                wear_min = Math.min(wear_min, temp);
+                                wear_max = Math.max(wear_max, temp);
+                            }
+                            wear_mean = wear_sum / n;
+
+                            wear_range = Math.abs(wear_max - wear_min);
+
+                            wear_rms = Math.sqrt(wear_rms / n);
+
+                            wear_sum = 0.0;
+                            for (int i = 0; i < n; i++){
+                                wear_sum += Math.pow((mData[i] - wear_mean), 2.0);
+                            }
+                            wear_var = wear_sum / n;
+
+                            // Get fft
+                            wear_fft8 = goertzel(mData, 8., n);
+
+                            if (classifyCalc) {
+                                // Decision tree (acc only) from sklearn, max = 5
+                                if (wear_rms <= 10.3000907898) {
+                                    if (wear_var <= 0.00882150046527) {
+                                        if (wear_rms <= 9.99174118042) {
+                                            if (wear_var <= 0.00562749989331) {
                                                 activity = 1;
                                             }
+                                        } else {
+                                            if (wear_range <= 0.393983006477) {
+                                                activity = 2;
+                                            } else {
+                                                if (wear_range <= 0.402398496866) {
+                                                    activity = 3;
+                                                } else {
+                                                    activity = 2;
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        if (wear_rms <= 10.0294046402) {
+                                            activity = 3;
+                                        } else {
+                                            if (wear_var <= 0.143972992897) {
+                                                activity = 2;
+                                            } else {
+                                                activity = 3;
+                                            }
                                         }
                                     }
                                 } else {
-                                    if (wear_range <= 12.9299907684) {
-                                        if (wear_var <= 1.36739695072) {
-                                            activity = 3;
+                                    if (wear_rms <= 10.8408107758) {
+                                        if (wear_var <= 2.39609098434) {
+                                            if (wear_range <= 5.30206346512) {
+                                                if (wear_range <= 3.69736599922) {
+                                                    activity = 3;
+                                                } else {
+                                                    activity = 2;
+                                                }
+                                            } else {
+                                                activity = 3;
+                                            }
                                         } else {
-                                            activity = 2;
+                                            if (wear_range <= 10.4032249451) {
+                                                activity = 2;
+                                            } else {
+                                                if (wear_var <= 11.2173519135) {
+                                                    activity = 3;
+                                                } else {
+                                                    activity = 1;
+                                                }
+                                            }
                                         }
                                     } else {
-                                        if (wear_fft8 <= 13.5743255615) {
-                                            activity = 2;
+                                        if (wear_range <= 12.9299907684) {
+                                            if (wear_var <= 1.36739695072) {
+                                                activity = 3;
+                                            } else {
+                                                activity = 2;
+                                            }
                                         } else {
-                                            activity = 3;
+                                            if (wear_fft8 <= 13.5743255615) {
+                                                activity = 2;
+                                            } else {
+                                                activity = 3;
+                                            }
                                         }
                                     }
                                 }
-                            }
 
-                            // Send classification result over bluetooth
-                            mClient.sendSensorData(tic, ByteBuffer.allocate(4).putInt(activity).array());
-                            Log.i(TAG, "sync result labels...");
+                                // Send classification result over bluetooth
+                                mClient.sendSensorData(tic, ByteBuffer.allocate(4).putInt(activity).array());
+                                Log.i(TAG, "sync result labels...");
+                            }
+                            else {
+                                // Send features over bluetooth
+                                ByteBuffer buf = ByteBuffer.allocate(8 * 5);
+                                buf.putDouble(wear_var);
+                                buf.putDouble(wear_fft8);
+                                buf.putDouble(wear_fft5);
+                                buf.putDouble(wear_rms);
+                                buf.putDouble(wear_range);
+                                mClient.sendSensorData(tic, buf.array());
+                                Log.i(TAG, "sync features...");
+                            }
                         }
                         else {
+                            // Send raw data over bluetooth
+                            ByteBuffer buf = ByteBuffer.allocate(8 * n);
+                            for (int i = 0; i < 8 * n; i++) {
+                                buf.putDouble(mData[i]);
+                            }
+                            mClient.sendSensorData(tic, buf.array());
+                            Log.i(TAG, "sync raw data...");
+                        }
+                    }
+                    else if (mType == InferenceType.WearPhoneAcc) {
+                        // In this case, the phone need 3 wearable features
+                        // Watch can choose to send features or raw data
+                        if (featureCalc) {
+                            // Features: var, fft (9), and fft(10)
+                            double wear_sum = 0.0;
+                            double wear_mean = 0.0;
+                            double wear_var = 0.0;
+                            double wear_fft9 = 0.0;
+                            double wear_fft10 = 0.0;
+
+                            // Get mean, var, rms, range
+                            for (int i = 0; i < n; i++) {
+                                double temp = mData[i];
+                                wear_sum += temp;
+                            }
+                            wear_mean = wear_sum / n;
+
+                            wear_sum = 0.0;
+                            for (int i = 0; i < n; i++){
+                                wear_sum += Math.pow((mData[i] - wear_mean), 2.0);
+                            }
+                            wear_var = wear_sum / n;
+
+                            // Get fft
+                            wear_fft9 = goertzel(mData, 9., n);
+                            wear_fft10 = goertzel(mData, 10., n);
+
                             // Send features over bluetooth
-                            ByteBuffer buf = ByteBuffer.allocate(8 * 5);
+                            ByteBuffer buf = ByteBuffer.allocate(8 * 3);
                             buf.putDouble(wear_var);
-                            buf.putDouble(wear_fft8);
-                            buf.putDouble(wear_fft5);
-                            buf.putDouble(wear_rms);
-                            buf.putDouble(wear_range);
+                            buf.putDouble(wear_fft9);
+                            buf.putDouble(wear_fft10);
                             mClient.sendSensorData(tic, buf.array());
                             Log.i(TAG, "sync features...");
                         }
-                    }
-                    else if (mType == InferenceType.WearAccGPS) {
-                        // Get GPS features
-                        double speed = 0.0;
-                        double acc = 0.0;
-
-                        // Get fft
-                        wear_fft5 = goertzel(mData, 8., n);
-
-                        // Get last known gps speed and accuracy
-                        synchronized (InferenceAlarmReceiver.locLock) {
-                            speed = locSpeed;
-                            acc = locAccuracy;
-                        }
-
-                        if (classifyCalc) {
-                            // Decision tree (acc + gps), 29 nodes, 88.81% accuracy
-                            if (speed < 2.19) {
-                                if (wear_var < 0.86) {
-                                    if (acc < 19.5) {
-                                        if (wear_var < 0.06) {
-                                            if (wear_mean < 9.99) {
-                                                activity = 3;
-                                            } else {
-                                                activity = 2;
-                                            }
-                                        } else {
-                                            if (acc < 10.5) {
-                                                activity = 3;
-                                            } else {
-                                                activity = 2;
-                                            }
-                                        }
-                                    } else {
-                                        if (acc < 28.35) {
-                                            if (speed < 0.25) {
-                                                activity = 1;
-                                            } else {
-                                                activity = 3;
-                                            }
-                                        } else {
-                                            if (speed < 0.25) {
-                                                activity = 2;
-                                            } else {
-                                                activity = 3;
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    if (wear_fft5 < 130.7) {
-                                        if (speed < 0.13) {
-                                            activity = 2;
-                                        } else {
-                                            if (acc < 118) {
-                                                activity = 3;
-                                            } else {
-                                                activity = 1;
-                                            }
-                                        }
-                                    } else {
-                                        if (acc < 8.5) {
-                                            activity = 2;
-                                        } else {
-                                            if (acc < 10.5) {
-                                                activity = 1;
-                                            } else {
-                                                activity = 2;
-                                            }
-                                        }
-                                    }
-                                }
-                            } else {
-                                activity = 3;
+                        else {
+                            // Send raw data over bluetooth
+                            ByteBuffer buf = ByteBuffer.allocate(8 * n);
+                            for (int i = 0; i < 8 * n; i++) {
+                                buf.putDouble(mData[i]);
                             }
+                            mClient.sendSensorData(tic, buf.array());
+                            Log.i(TAG, "sync raw data...");
                         }
                     }
 
                     long toc = System.nanoTime();
-                    Log.d(TAG, String.format("res=%d, time=%d ns", activity, (toc - tic)));
+                    Log.d(TAG, String.format("act=%d, time=%dns", activity, (toc - tic)));
                     // Log.d(TAG, String.format("There are %d threads", numThreads));
                     numThreads--;
                 }

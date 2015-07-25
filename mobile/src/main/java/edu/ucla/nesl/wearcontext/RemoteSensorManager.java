@@ -6,6 +6,8 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+
+import edu.ucla.nesl.wearcontext.alarm.InferenceAlarmReceiver;
 import edu.ucla.nesl.wearcontext.shared.ClientPaths;
 import edu.ucla.nesl.wearcontext.shared.DataMapKeys;
 
@@ -23,6 +25,8 @@ import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.common.api.GoogleApiClient.*;
 import android.os.Bundle;
+
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,6 +37,7 @@ public class RemoteSensorManager implements DataApi.DataListener,
         GoogleApiClient.OnConnectionFailedListener   {
     private static final String TAG = "WearContext/Mobile/RemoteSensorManager";
     private static final int CLIENT_CONNECTION_TIMEOUT = 15000;
+    private static final boolean SYNC_FEATURE = true;
 
     private static RemoteSensorManager instance;
 
@@ -101,6 +106,12 @@ public class RemoteSensorManager implements DataApi.DataListener,
         long timestamp = dataMap.getLong(DataMapKeys.TIMESTAMP);
         byte[] values = dataMap.getByteArray(DataMapKeys.VALUES);
         Log.d(TAG, "Received sensor data, ts=" + timestamp + ", size=" + values.length);
+
+        // Unpack to get the 3 wearable features
+        if (SYNC_FEATURE) {
+            ByteBuffer buf = ByteBuffer.wrap(values);
+            InferenceAlarmReceiver.setWearFeature(buf.getDouble(0), buf.getDouble(1),buf.getDouble(2));
+        }
     }
 
     @Override
