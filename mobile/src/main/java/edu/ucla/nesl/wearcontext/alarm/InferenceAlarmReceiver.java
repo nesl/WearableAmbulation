@@ -17,7 +17,9 @@ import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
+import android.os.Vibrator;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -35,7 +37,10 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
     private final static int SENSING_PERIOD = 1000 * 90;
     private final static int ALARM_INTERVAL = 1000 * 60 * 5; // Millisec * Second * Minute
 
-    private final static InferenceType mType = InferenceType.PhoneAccGPS;
+    private final static String START_BATTERY_LOGGING = "android.intent.action.START_BATTERY_LOGGING";
+    private final static String STOP_BATTERY_LOGGING = "android.intent.action.STOP_BATTERY_LOGGING";
+
+    private final static InferenceType mType = InferenceType.WearPhoneAcc;
     private final static boolean logBattery = false;
     private final static boolean featureCalc = true;
     private final static boolean classifyCalc = true;
@@ -43,7 +48,7 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
     private SensorManager mSensorManager;
     private TransportationModeListener mListener;
     private LocationManager mLocationManager;
-    private LocationListener mLocationListener;
+    private Vibrator mVibrator;
 
     private static int numThreads;
     private static int resCount = 0;
@@ -54,13 +59,20 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
     private double gps_accuracy = 0.0, gps_speed = 0.0;
     private static double wear_var = 0.0, wear_fft9 = 0.0, wear_fft10 = 0.0;
 
+    private Context mContext;
+
     @Override
     public void onReceive(Context context, Intent intent) {
         PowerManager mPowerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         PowerManager.WakeLock wl = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "inf_wakelock");
         wl.acquire();
 
+        mContext = context;
+        mVibrator = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
+
         Log.i(TAG, "InferenceAlarmReceiver received, mType=" + mType + ", feature=" + featureCalc + ", classify=" + classifyCalc);
+        // Toast.makeText(mContext, "InferenceAlarmReceiver received, mType=" + mType + ", feature=" + featureCalc + ", classify=" + classifyCalc, Toast.LENGTH_LONG).show();
+        mVibrator.vibrate(500);
 
         if (logBattery) {
             try {
@@ -102,19 +114,28 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
             // Start inference using only acc for 1 minute (10s for test)
             mSensorManager = ((SensorManager) context.getSystemService(Context.SENSOR_SERVICE));
             Sensor accelerometerSensor = mSensorManager.getDefaultSensor(SENS_ACCELEROMETER);
-            mLocationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
             // Register the listener
             if (mSensorManager != null) {
                 if (accelerometerSensor != null) {
                     mListener = new TransportationModeListener(mType);
-                    mSensorManager.registerListener(mListener, accelerometerSensor, SensorManager.SENSOR_DELAY_FASTEST);
 
-                    // location update
-                    if (mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-                        mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mListener);
-                    if (mLocationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
-                        mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mListener);
+                    mSensorManager.registerListener(mListener, accelerometerSensor, SensorManager.SENSOR_DELAY_GAME);
+
+                    if (mType == InferenceType.PhoneAccGPS) {
+                        mLocationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+                        // location update
+                        if (mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
+                            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mListener);
+                        if (mLocationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
+                            mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mListener);
+                    }
+
+                    // Start battery logging
+                    Intent startBatteryLogging = new Intent();
+                    startBatteryLogging.setAction(START_BATTERY_LOGGING);
+                    startBatteryLogging.putExtra("NAME", mType == InferenceType.PhoneAccGPS ? "AccGPS" : "Acc");
+                    context.sendBroadcast(startBatteryLogging);
 
 
                 } else {
@@ -129,8 +150,20 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
                 public void run() {
                     mSensorManager.unregisterListener(mListener);
                     mSensorManager = null;
-                    mLocationManager.removeUpdates(mListener);
+
+                    if (mType == InferenceType.PhoneAccGPS) {
+                        mLocationManager.removeUpdates(mListener);
+                    }
+
+                    // Stop battery logging
+                    Intent stopBatteryLogging = new Intent();
+                    stopBatteryLogging.setAction(STOP_BATTERY_LOGGING);
+                    mContext.sendBroadcast(stopBatteryLogging);
+
                     Log.i(TAG, "InferenceAlarmReceiver execution finished.");
+                    // Toast.makeText(mContext, "InferenceAlarmReceiver execution finished.", Toast.LENGTH_LONG).show();
+                    cancelAlarm(mContext);
+                    mVibrator.vibrate(500);
                 }
             }, SENSING_PERIOD);
         }
@@ -143,8 +176,9 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         Intent i = new Intent(context, InferenceAlarmReceiver.class);
         PendingIntent pi = PendingIntent.getBroadcast(context, 0, i, 0);
-        am.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), ALARM_INTERVAL, pi);
+        am.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000 * 10, ALARM_INTERVAL, pi);
         Log.i(TAG, "Alarm set.");
+        Toast.makeText(context, "Alarm set.", Toast.LENGTH_LONG).show();
     }
 
     public void cancelAlarm(Context context) {
@@ -153,6 +187,7 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         alarmManager.cancel(sender);
         Log.i(TAG, "Alarm cancelled.");
+        Toast.makeText(context, "Alarm cancelled.", Toast.LENGTH_LONG).show();
     }
 
     private class TransportationModeListener implements SensorEventListener, LocationListener {
@@ -204,7 +239,7 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
                         count = 0;
                         //Log.d(TAG, "Reset samples");
                     }
-                    if (count >= 100) {
+                    if (count >= 200) {
                         Log.d(TAG, "Wha?? " + System.currentTimeMillis() + " is the time now and we started samples at " + start + " and there are " + count
                                 + " samples");
                         return;
@@ -213,9 +248,6 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
 
                 data[count] = totalForce;
                 count++;
-                if (count >= 100) {
-                    count = 0;
-                }
             }
 
         }
@@ -273,6 +305,10 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
                             double phone_rms = 0.0;
                             double phone_min = Double.MAX_VALUE;
                             double phone_max = Double.MIN_VALUE;
+
+                            wear_var = Math.random() * 10.0;
+                            wear_fft9 = Math.random() * 10.0;
+                            wear_fft10 = Math.random() * 10.0;
 
                             // Get mean, var, rms, range
                             for (int i = 0; i < n; i++) {
@@ -534,7 +570,7 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
                     }
 
                     long toc = System.nanoTime();
-                    Log.d(TAG, String.format("res=%d, time=%d ns", activity, (toc - tic)));
+                    Log.d(TAG, String.format("res=%s, time=%d ns", activity, (toc - tic)));
                     // Log.d(TAG, String.format("There are %d threads", numThreads));
                     numThreads--;
                 }

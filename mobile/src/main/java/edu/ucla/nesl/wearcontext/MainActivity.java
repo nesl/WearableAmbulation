@@ -18,7 +18,7 @@ import edu.ucla.nesl.wearcontext.alarm.InferenceAlarmReceiver;
 
 public class MainActivity extends ActionBarActivity  {
     private static final String TAG = "WearContext/Mobile/MainActivity";
-    private static InferenceAlarmReceiver alarmReceiver;
+    private static InferenceAlarmReceiver alarmReceiver  = new InferenceAlarmReceiver();
     private Context context;
     private RemoteSensorManager remoteSensorManager;
 
@@ -32,7 +32,6 @@ public class MainActivity extends ActionBarActivity  {
 
         remoteSensorManager = RemoteSensorManager.getInstance(this);
 
-        alarmReceiver = new InferenceAlarmReceiver();
         context = this;
 
         Button button1 = (Button) findViewById(R.id.button1);
@@ -40,7 +39,7 @@ public class MainActivity extends ActionBarActivity  {
             @Override
             public void onClick(View v) {
                 alarmReceiver.setAlarm(context);
-                remoteSensorManager.connect();
+                // remoteSensorManager.connect();
             }
         });
 
@@ -49,7 +48,7 @@ public class MainActivity extends ActionBarActivity  {
             @Override
             public void onClick(View v) {
                 alarmReceiver.cancelAlarm(context);
-                remoteSensorManager.disconnect();
+                // remoteSensorManager.disconnect();
             }
         });
 

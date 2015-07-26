@@ -30,6 +30,8 @@
             </intent-filter>
         </activity>
 
+        <receiver android:name=".alarm.InferenceAlarmReceiver"></receiver>
+
     </application>
 
 </manifest>
