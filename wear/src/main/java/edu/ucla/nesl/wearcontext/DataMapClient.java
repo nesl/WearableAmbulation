@@ -16,15 +16,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class DeviceClient {
-    private static final String TAG = "WearContext/Wear/DeviceClient";
+public class DataMapClient {
+    private static final String TAG = "Wear/DataMapClient";
     private static final int CLIENT_CONNECTION_TIMEOUT = 15000;
 
-    public static DeviceClient instance;
+    public static DataMapClient instance;
 
-    public static DeviceClient getInstance(Context context) {
+    public static DataMapClient getInstance(Context context) {
         if (instance == null) {
-            instance = new DeviceClient(context.getApplicationContext());
+            instance = new DataMapClient(context.getApplicationContext());
         }
 
         return instance;
@@ -33,7 +33,7 @@ public class DeviceClient {
     private GoogleApiClient googleApiClient;
     private ExecutorService executorService;
 
-    private DeviceClient(Context context) {
+    private DataMapClient(Context context) {
         googleApiClient = new GoogleApiClient.Builder(context).addApi(Wearable.API).build();
         executorService = Executors.newCachedThreadPool();
     }

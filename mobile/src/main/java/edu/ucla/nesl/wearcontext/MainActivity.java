@@ -7,20 +7,15 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.*;
 import android.widget.Button;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
-import android.os.PowerManager;
-import android.os.PowerManager.*;
 
 import edu.ucla.nesl.wearcontext.alarm.InferenceAlarmReceiver;
 
 
 public class MainActivity extends ActionBarActivity  {
-    private static final String TAG = "WearContext/Mobile/MainActivity";
+    private static final String TAG = "Mobile/MainActivity";
     private static InferenceAlarmReceiver alarmReceiver  = new InferenceAlarmReceiver();
     private Context context;
-    private RemoteSensorManager remoteSensorManager;
+    private RemoteSensorListener remoteSensorListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,7 +25,7 @@ public class MainActivity extends ActionBarActivity  {
         Toolbar toolbar = (Toolbar) findViewById(R.id.my_awesome_toolbar);
         setSupportActionBar(toolbar);
 
-        remoteSensorManager = RemoteSensorManager.getInstance(this);
+        remoteSensorListener = RemoteSensorListener.getInstance(this);
 
         context = this;
 
@@ -39,7 +34,7 @@ public class MainActivity extends ActionBarActivity  {
             @Override
             public void onClick(View v) {
                 alarmReceiver.setAlarm(context);
-                // remoteSensorManager.connect();
+                // remoteSensorListener.connect();
             }
         });
 
@@ -48,7 +43,7 @@ public class MainActivity extends ActionBarActivity  {
             @Override
             public void onClick(View v) {
                 alarmReceiver.cancelAlarm(context);
-                // remoteSensorManager.disconnect();
+                // remoteSensorListener.disconnect();
             }
         });
 

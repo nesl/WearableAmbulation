@@ -21,7 +21,7 @@ import java.io.IOException;
 import android.os.Vibrator;
 
 public class SensorService extends Service{
-    private static final String TAG = "WearContext/Wear/SensorService";
+    private static final String TAG = "Wear/SensorService";
 
     private final static int SENS_ACCELEROMETER = Sensor.TYPE_ACCELEROMETER;
 

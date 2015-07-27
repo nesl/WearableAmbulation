@@ -15,7 +15,7 @@ import edu.ucla.nesl.wearcontext.alarm.InferenceAlarmReceiver;
 
 public class MainActivity extends Activity {
     private static final String TAG = "WearContext/Wear/MainActivity";
-    private DeviceClient client;
+    private DataMapClient client;
     private Random random;
     private boolean mAlarmSet = false;
 
@@ -26,7 +26,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-        client = DeviceClient.getInstance(this);
+        client = DataMapClient.getInstance(this);
         random = new Random();
 
         alarm.setAlarm(this);

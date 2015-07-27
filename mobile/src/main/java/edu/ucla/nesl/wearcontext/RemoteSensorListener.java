@@ -32,14 +32,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class RemoteSensorManager implements DataApi.DataListener,
+public class RemoteSensorListener implements DataApi.DataListener,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener   {
-    private static final String TAG = "WearContext/Mobile/RemoteSensorManager";
+    private static final String TAG = "Mobile/RemoteSensorMgr";
     private static final int CLIENT_CONNECTION_TIMEOUT = 15000;
     private static final boolean SYNC_FEATURE = true;
 
-    private static RemoteSensorManager instance;
+    private static RemoteSensorListener instance;
 
     private final Context context;
     private ExecutorService executorService;
@@ -47,15 +47,15 @@ public class RemoteSensorManager implements DataApi.DataListener,
 
     private GoogleApiClient googleApiClient;
 
-    public static synchronized RemoteSensorManager getInstance(Context context) {
+    public static synchronized RemoteSensorListener getInstance(Context context) {
         if (instance == null) {
-            instance = new RemoteSensorManager(context.getApplicationContext());
+            instance = new RemoteSensorListener(context.getApplicationContext());
         }
 
         return instance;
     }
 
-    private RemoteSensorManager(Context _context) {
+    private RemoteSensorListener(Context _context) {
         context = _context;
 
         googleApiClient = new Builder(context)

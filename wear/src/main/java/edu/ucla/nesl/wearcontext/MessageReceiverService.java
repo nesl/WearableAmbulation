@@ -7,7 +7,7 @@ import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.WearableListenerService;
 
 public class MessageReceiverService extends WearableListenerService {
-    private static final String TAG = "WearContext/Wear/MessageReceiverService";
+    private static final String TAG = "Wear/MsgReceiverService";
 
     @Override
     public void onCreate() {
