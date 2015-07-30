@@ -17,7 +17,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class DataMapClient {
-    private static final String TAG = "Wear/DataMapClient";
+    private static final String TAG = "Wear/InfDataMapClient";
     private static final int CLIENT_CONNECTION_TIMEOUT = 15000;
 
     public static DataMapClient instance;

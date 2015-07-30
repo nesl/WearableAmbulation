@@ -14,7 +14,7 @@ import java.util.Random;
 import edu.ucla.nesl.wearcontext.alarm.InferenceAlarmReceiver;
 
 public class MainActivity extends Activity {
-    private static final String TAG = "WearContext/Wear/MainActivity";
+    private static final String TAG = "Wear/InfMainAct";
     private DataMapClient client;
     private Random random;
     private boolean mAlarmSet = false;
@@ -51,20 +51,20 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         Log.i(TAG, "onResume() called");
-        // Read alarm info from shared preference
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        mAlarmSet = sharedPref.getBoolean(getString(R.string.alarm_set), false);
+//        // Read alarm info from shared preference
+//        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+//        mAlarmSet = sharedPref.getBoolean(getString(R.string.alarm_set), false);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         Log.i(TAG, "onPause() called");
-        // Save to shared preference
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putBoolean(getString(R.string.alarm_set), mAlarmSet);
-        editor.commit();
+//        // Save to shared preference
+//        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+//        SharedPreferences.Editor editor = sharedPref.edit();
+//        editor.putBoolean(getString(R.string.alarm_set), mAlarmSet);
+//        editor.commit();
     }
 
     @Override

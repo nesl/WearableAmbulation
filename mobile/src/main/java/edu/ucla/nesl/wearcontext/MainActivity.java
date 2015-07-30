@@ -34,7 +34,6 @@ public class MainActivity extends ActionBarActivity  {
             @Override
             public void onClick(View v) {
                 alarmReceiver.setAlarm(context);
-                // remoteSensorListener.connect();
             }
         });
 
@@ -43,7 +42,6 @@ public class MainActivity extends ActionBarActivity  {
             @Override
             public void onClick(View v) {
                 alarmReceiver.cancelAlarm(context);
-                // remoteSensorListener.disconnect();
             }
         });
 
@@ -54,6 +52,7 @@ public class MainActivity extends ActionBarActivity  {
     protected void onResume() {
         super.onResume();
         Log.i(TAG, "onResume() called");
+        remoteSensorListener.connect();
 
     }
 
@@ -61,6 +60,7 @@ public class MainActivity extends ActionBarActivity  {
     protected void onPause() {
         super.onPause();
         Log.i(TAG, "onPause() called");
+        remoteSensorListener.disconnect();
     }
 
     @Override

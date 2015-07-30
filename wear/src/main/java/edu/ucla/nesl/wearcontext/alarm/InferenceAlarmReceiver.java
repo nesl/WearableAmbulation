@@ -38,7 +38,7 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
 
     private final static InferenceType mType = InferenceType.WearAcc;
     private final static boolean logBattery = false;
-    private final static boolean featureCalc = false;
+    private final static boolean featureCalc = true;
     private final static boolean classifyCalc = false;
 
     private SensorManager mSensorManager;
@@ -227,9 +227,6 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
 
                 data[count] = totalForce;
                 count++;
-                if (count >= 100) {
-                    count = 0;
-                }
             }
 
         }
@@ -362,9 +359,9 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
                                     }
                                 }
 
-                                // Send classification result over bluetooth
-                                mClient.sendSensorData(tic, ByteBuffer.allocate(4).putInt(activity).array());
-                                Log.i(TAG, "sync result labels...");
+//                                // Send classification result over bluetooth
+//                                mClient.sendSensorData(tic, ByteBuffer.allocate(4).putInt(activity).array());
+//                                Log.i(TAG, "sync result labels...");
                             }
                             else {
                                 // Send features over bluetooth
@@ -381,11 +378,11 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
                         else {
                             // Send raw data over bluetooth
                             ByteBuffer buf = ByteBuffer.allocate(8 * n);
-                            for (int i = 0; i < 8 * n; i++) {
+                            for (int i = 0; i < n; i++) {
                                 buf.putDouble(mData[i]);
                             }
                             mClient.sendSensorData(tic, buf.array());
-                            Log.i(TAG, "sync raw data...");
+                            Log.i(TAG, "Sending raw data...");
                         }
                     }
                     else if (mType == InferenceType.WearPhoneAcc) {
