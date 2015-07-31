@@ -52,7 +52,7 @@ public class MainActivity extends ActionBarActivity  {
     protected void onResume() {
         super.onResume();
         Log.i(TAG, "onResume() called");
-        remoteSensorListener.connect();
+        // remoteSensorListener.connect();
 
     }
 
@@ -60,7 +60,7 @@ public class MainActivity extends ActionBarActivity  {
     protected void onPause() {
         super.onPause();
         Log.i(TAG, "onPause() called");
-        remoteSensorListener.disconnect();
+        // remoteSensorListener.disconnect();
     }
 
     @Override

@@ -31,16 +31,16 @@ import edu.ucla.nesl.wearcontext.shared.InferenceType;
  * Created by cgshen on 7/12/15.
  */
 public class InferenceAlarmReceiver extends BroadcastReceiver {
-    private final static String TAG = "WearContext/Mobile/InferenceAlarmReceiver";
+    private final static String TAG = "Mobile/InfAlarmRecv";
     private final static long timestamp = System.currentTimeMillis();
     private final static int SENS_ACCELEROMETER = Sensor.TYPE_ACCELEROMETER;
-    private final static int SENSING_PERIOD = 1000 * 90;
+    private final static int SENSING_PERIOD = 1000 * 60;
     private final static int ALARM_INTERVAL = 1000 * 60 * 5; // Millisec * Second * Minute
 
     private final static String START_BATTERY_LOGGING = "android.intent.action.START_BATTERY_LOGGING";
     private final static String STOP_BATTERY_LOGGING = "android.intent.action.STOP_BATTERY_LOGGING";
 
-    private final static InferenceType mType = InferenceType.WearPhoneAcc;
+    private final static InferenceType mType = InferenceType.NoInference;
     private final static boolean logBattery = false;
     private final static boolean featureCalc = true;
     private final static boolean classifyCalc = true;
@@ -110,7 +110,22 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
             Log.i("PowerConnectionReceiver", "isCharging==" + isCharging);
         }
 
-        if (mType == InferenceType.WearPhoneAcc || mType == InferenceType.PhoneAccGPS) {
+        if (mType == InferenceType.NoInference) {
+            // Start battery logging
+            Intent startBatteryLogging = new Intent();
+            startBatteryLogging.setAction(START_BATTERY_LOGGING);
+            startBatteryLogging.putExtra("NAME", mType.toString());
+            context.sendBroadcast(startBatteryLogging);
+
+            long j = 0;
+            while (true) {
+                j++;
+                if (j > Integer.MAX_VALUE) {
+                    j = 0;
+                }
+            }
+        }
+        else if (mType == InferenceType.WearPhoneAcc || mType == InferenceType.PhoneAccGPS || mType == InferenceType.PhoneAcc) {
             // Start inference using only acc for 1 minute (10s for test)
             mSensorManager = ((SensorManager) context.getSystemService(Context.SENSOR_SERVICE));
             Sensor accelerometerSensor = mSensorManager.getDefaultSensor(SENS_ACCELEROMETER);
@@ -120,7 +135,7 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
                 if (accelerometerSensor != null) {
                     mListener = new TransportationModeListener(mType);
 
-                    mSensorManager.registerListener(mListener, accelerometerSensor, SensorManager.SENSOR_DELAY_GAME);
+                    mSensorManager.registerListener(mListener, accelerometerSensor, SensorManager.SENSOR_DELAY_NORMAL);
 
                     if (mType == InferenceType.PhoneAccGPS) {
                         mLocationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
@@ -134,7 +149,7 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
                     // Start battery logging
                     Intent startBatteryLogging = new Intent();
                     startBatteryLogging.setAction(START_BATTERY_LOGGING);
-                    startBatteryLogging.putExtra("NAME", mType == InferenceType.PhoneAccGPS ? "AccGPS" : "Acc");
+                    startBatteryLogging.putExtra("NAME", mType.toString());
                     context.sendBroadcast(startBatteryLogging);
 
 
@@ -177,7 +192,7 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
         Intent i = new Intent(context, InferenceAlarmReceiver.class);
         PendingIntent pi = PendingIntent.getBroadcast(context, 0, i, 0);
         am.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000 * 10, ALARM_INTERVAL, pi);
-        Log.i(TAG, "Alarm set.");
+        Log.i(TAG, "Alarm set. type=" + this.mType);
         Toast.makeText(context, "Alarm set.", Toast.LENGTH_LONG).show();
     }
 
@@ -219,31 +234,29 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
                 totalForce += Math.pow(accz, 2.0);
                 totalForce = Math.sqrt(totalForce);
 
-                if (featureCalc) {
-                    long cur = System.currentTimeMillis();
-                    // 1s classification window
-                    if (cur - start >= 1000) {
-                        start = cur;
-                        double[] classData = new double[count];
-                        System.arraycopy(data, 0, classData, 0, classData.length);
+                long cur = System.currentTimeMillis();
+                // 1s classification window
+                if (cur - start >= 1000) {
+                    start = cur;
+                    double[] classData = new double[count];
+                    System.arraycopy(data, 0, classData, 0, classData.length);
 
-                        if (count >= 5) {
-                            thread = new Thread(new Worker(classData));
-                            // Log.d(TAG, "Starting thread");
-                            thread.start();
-                            numThreads++;
-                        }
-                        else {
-                            Log.d(TAG, "Transportation mode: still (too few acc samples)");
-                        }
-                        count = 0;
-                        //Log.d(TAG, "Reset samples");
+                    if (count >= 5) {
+                        thread = new Thread(new Worker(classData));
+                        // Log.d(TAG, "Starting thread");
+                        thread.start();
+                        numThreads++;
                     }
-                    if (count >= 200) {
-                        Log.d(TAG, "Wha?? " + System.currentTimeMillis() + " is the time now and we started samples at " + start + " and there are " + count
-                                + " samples");
-                        return;
+                    else {
+                        Log.d(TAG, "Transportation mode: still (too few acc samples)");
                     }
+                    count = 0;
+                    //Log.d(TAG, "Reset samples");
+                }
+                if (count >= 100) {
+                    Log.d(TAG, "Wha?? " + System.currentTimeMillis() + " is the time now and we started samples at " + start + " and there are " + count
+                            + " samples");
+                    return;
                 }
 
                 data[count] = totalForce;
@@ -305,10 +318,6 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
                             double phone_rms = 0.0;
                             double phone_min = Double.MAX_VALUE;
                             double phone_max = Double.MIN_VALUE;
-
-                            wear_var = Math.random() * 10.0;
-                            wear_fft9 = Math.random() * 10.0;
-                            wear_fft10 = Math.random() * 10.0;
 
                             // Get mean, var, rms, range
                             for (int i = 0; i < n; i++) {
@@ -434,6 +443,130 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
                                                     activity = "walking";
                                                 } else {
                                                     activity = "still";
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else if (mType == InferenceType.PhoneAcc) {
+                        if (featureCalc) {
+                            // phone-side feature: var, range, and fft 3, 5, 7, 8
+                            double phone_sum = 0.0;
+                            double phone_mean = 0.0;
+                            double phone_var = 0.0;
+                            double phone_range = 0.0;
+                            double phone_min = Double.MAX_VALUE;
+                            double phone_max = Double.MIN_VALUE;
+
+                            // Get mean, var, rms, range
+                            for (int i = 0; i < n; i++) {
+                                double temp = mData[i];
+                                phone_sum += temp;
+                                phone_min = Math.min(phone_min, temp);
+                                phone_max = Math.max(phone_max, temp);
+                            }
+                            phone_mean = phone_sum / n;
+                            phone_range = Math.abs(phone_max - phone_min);
+
+                            phone_sum = 0.0;
+                            for (int i = 0; i < n; i++){
+                                phone_sum += Math.pow((mData[i] - phone_mean), 2.0);
+                            }
+                            phone_var = phone_sum / n;
+
+                            double phone_fft3 = goertzel(mData, 3., n);
+                            double phone_fft5 = goertzel(mData, 3., n);
+                            double phone_fft7 = goertzel(mData, 3., n);
+                            double phone_fft8 = goertzel(mData, 3., n);
+
+                            if (classifyCalc) {
+                                if ( phone_fft5 <= 16.0903167725 ) {
+                                    if ( phone_range <= 1.38361096382 ) {
+                                        if ( phone_var <= 0.00403899978846 ) {
+                                            activity = "still";
+                                        } else {
+                                            if ( phone_fft8 <= 0.0102514997125 ) {
+                                                if ( phone_fft7 <= 0.0164844989777 ) {
+                                                    activity = "transport";
+                                                } else {
+                                                    activity = "still";
+                                                }
+                                            } else {
+                                                activity = "still";
+                                            }
+                                        }
+                                    } else {
+                                        if ( phone_fft8 <= 14.7126274109 ) {
+                                            activity = "transport";
+                                        } else {
+                                            if ( phone_fft3 <= 41.4190139771 ) {
+                                                if ( phone_fft7 <= 7.80773258209 ) {
+                                                    activity = "transport";
+                                                } else {
+                                                    activity = "walking";
+                                                }
+                                            } else {
+                                                if ( phone_range <= 24.3013896942 ) {
+                                                    activity = "walking";
+                                                } else {
+                                                    activity = "still";
+                                                }
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    if ( phone_fft3 <= 9.78978919983 ) {
+                                        if ( phone_range <= 8.2459897995 ) {
+                                            if ( phone_fft5 <= 32.9898071289 ) {
+                                                activity = "still";
+                                            } else {
+                                                if ( phone_fft7 <= 39.8791122437 ) {
+                                                    activity = "still";
+                                                } else {
+                                                    activity = "transport";
+                                                }
+                                            }
+                                        } else {
+                                            if ( phone_fft7 <= 28.5226364136 ) {
+                                                if ( phone_fft5 <= 193.261199951 ) {
+                                                    activity = "transport";
+                                                } else {
+                                                    activity = "still";
+                                                }
+                                            } else {
+                                                if ( phone_fft5 <= 352.434020996 ) {
+                                                    activity = "walking";
+                                                } else {
+                                                    activity = "still";
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        if ( phone_fft3 <= 107.298538208 ) {
+                                            if ( phone_fft8 <= 90.7769622803 ) {
+                                                if ( phone_range <= 14.9306430817 ) {
+                                                    activity = "walking";
+                                                } else {
+                                                    activity = "transport";
+                                                }
+                                            } else {
+                                                if ( phone_var <= 21.7859687805 ) {
+                                                    activity = "walking";
+                                                } else {
+                                                    activity = "still";
+                                                }
+                                            }
+                                        } else {
+                                            if ( phone_fft3 <= 756.264160156 ) {
+                                                activity = "walking";
+                                            } else {
+                                                if ( phone_fft5 <= 290.928466797 ) {
+                                                    activity = "walking";
+                                                } else {
+                                                    activity = "transport";
                                                 }
                                             }
                                         }
@@ -606,5 +739,6 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
             wear_fft9 = _wear_fft9;
             wear_fft10 = _wear_fft10;
         }
+        Log.i(TAG, "update wear features...");
     }
 }

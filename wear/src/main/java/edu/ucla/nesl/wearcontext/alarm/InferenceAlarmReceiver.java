@@ -33,10 +33,10 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
     private final static String TAG = "Wear/InfAlarmReceiver";
     private final static long timestamp = System.currentTimeMillis();
     private final static int SENS_ACCELEROMETER = Sensor.TYPE_ACCELEROMETER;
-    private final static int SENSING_PERIOD = 1000 * 90;
+    private final static int SENSING_PERIOD = 1000 * 150;
     private final static int ALARM_INTERVAL = 1000 * 60 * 5; // Millisec * Second * Minute
 
-    private final static InferenceType mType = InferenceType.WearAcc;
+    private final static InferenceType mType = InferenceType.WearPhoneAcc;
     private final static boolean logBattery = false;
     private final static boolean featureCalc = true;
     private final static boolean classifyCalc = false;
@@ -99,7 +99,18 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
             Log.i("PowerConnectionReceiver", "isCharging==" + isCharging);
         }
 
-        if (mType == InferenceType.DataTransmission) {
+        if (mType == InferenceType.NoInference) {
+            int j = 0;
+            for (int i = 0; i < 60; i++) {
+                j++;
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        else if (mType == InferenceType.DataTransmission) {
             // Test sending data from watch to phone
             Log.i(TAG, "Sending data via BLE...");
 
@@ -120,8 +131,7 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
 
             Log.i(TAG, "Sending data ALL finished.");
         }
-
-        if (mType == InferenceType.WearAcc || mType == InferenceType.WearAccGPS) {
+        else if (mType == InferenceType.WearAcc || mType == InferenceType.WearAccGPS || mType == InferenceType.WearPhoneAcc) {
             // Start inference using only acc for 1 minute (10s for test)
             mSensorManager = ((SensorManager) context.getSystemService(Context.SENSOR_SERVICE));
             Sensor accelerometerSensor = mSensorManager.getDefaultSensor(SENS_ACCELEROMETER);
@@ -419,7 +429,7 @@ public class InferenceAlarmReceiver extends BroadcastReceiver {
                             buf.putDouble(wear_fft9);
                             buf.putDouble(wear_fft10);
                             mClient.sendSensorData(tic, buf.array());
-                            Log.i(TAG, "sync features...");
+                            Log.i(TAG, "Sending features...");
                         }
                         else {
                             // Send raw data over bluetooth

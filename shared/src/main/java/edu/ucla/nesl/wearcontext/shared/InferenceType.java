@@ -9,5 +9,6 @@ public enum InferenceType {
     WearAcc,
     WearAccGPS,
     WearPhoneAcc,
+    PhoneAcc,
     PhoneAccGPS
 }
