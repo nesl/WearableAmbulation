@@ -1,6 +1,4 @@
-WearContext
+# WearableAmbulation
+Activity recognition using smartwatches and smartphones.
 
-Context inference on wearable devices.
-
-##
-initial app: accelerometer + DT activity classification
+Sensor used: smartwatch accelerometer, phone accelerometer, and phone GPS.
